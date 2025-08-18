@@ -1,1 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>セーブデータ編集＆書き換え</title>
+</head>
+<body>
+<h2>セーブデータの範囲書き換え＆チェックサム修正</h2>
 
+<label>範囲開始（16進数）: <input type="text" id="rangeStart" value="0x2598" /></label><br>
+<label>範囲終了（16進数）: <input type="text" id="rangeEnd" value="0x3593" /></label><br>
+<label>書き換え内容（2文字区切り）: <input type="text" id="contentInput" placeholder="例: AA BB CC ..." /><br>
+<input type="file" id="fileInput" />
+<br><br>
+<button onclick="processFile()">編集＆修正＆ダウンロード</button>
+<p id="status"></p>
+
+<script>
+const getByte = (array, index) => array[index];
+
+function processFile() {
+  const fileInput = document.getElementById('fileInput');
+  const status = document.getElementById('status');
+
+  if (!fileInput.files.length) {
+    alert('ファイルを選択してください！');
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+
+  const rangeStartHex = document.getElementById('rangeStart').value;
+  const rangeEndHex = document.getElementById('rangeEnd').value;
+  const contentStr = document.getElementById('contentInput').value.trim();
+
+  // 16進数を数値に変換  
+  const start = parseInt(rangeStartHex, 16);
+  const end = parseInt(rangeEndHex, 16);
+
+  // 内容を2文字区切りの配列に変換  
+  if (contentStr.length % 2 !== 0) {
+    alert('内容は2文字ごとに区切ってください！');
+    return;
+  }
+  const contentArr = contentStr.match(/.{2}/g).map(byteStr => parseInt(byteStr, 16));
+
+  reader.onload = function(e) {
+    const arrayBuffer = e.target.result;
+    const sav = new Uint8Array(arrayBuffer);
+
+    if (sav.length < end || sav.length < start) {
+      status.innerText = 'データが範囲外です！';
+      return;
+    }
+
+    // 指定範囲を書き換え  
+    const length = end - start;
+    for (let i = 0; i < length; i++) {
+      if (i < contentArr.length) {
+        sav[start + i] = contentArr[i];
+      } else {
+        // 内容より長さが短い場合、残りは0に  
+        sav[start + i] = 0x00;
+      }
+    }
+
+    // チェックサム計算  
+    let checksum = 255;
+    for (let ofs = 0x2598; ofs < 0x3593; ofs++) {
+      checksum -= getByte(sav, ofs);
+    }
+    checksum &= 0xFF;
+    sav[0x3594] = checksum;
+
+    // ダウンロード  
+    const blob = new Blob([sav], {type: 'application/octet-stream'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'edited_save.dat';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    status.innerText = '編集完了！ファイルをダウンロードしてください。';
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+</script>
+</body>
+</html>
