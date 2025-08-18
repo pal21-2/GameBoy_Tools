@@ -2,17 +2,17 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
-<title>セーブデータ編集＆書き換え</title>
+<title>セーブエディター - pal21-2</title>
 </head>
 <body>
-<h2>セーブデータの範囲書き換え＆チェックサム修正</h2>
+<h2>セーブエディター</h2>
 
-<label>範囲開始（16進数）: <input type="text" id="rangeStart" value="0x2598" /></label><br>
-<label>範囲終了（16進数）: <input type="text" id="rangeEnd" value="0x3593" /></label><br>
-<label>書き換え内容（2文字区切り）: <input type="text" id="contentInput" placeholder="例: AA BB CC ..." /><br>
+<label>範囲開始（16進数）: <input type="text" id="rangeStart" value="0x0000" /></label><br>
+<label>範囲終了（16進数）: <input type="text" id="rangeEnd" value="0x0000" /></label><br>
+<label>書き換え内容（2文字区切り）※任意: <input type="text" id="contentInput" placeholder="例: 2101D0" /><br>
 <input type="file" id="fileInput" />
 <br><br>
-<button onclick="processFile()">編集＆修正＆ダウンロード</button>
+<button onclick="processFile()">修正&ダウンロード</button>
 <p id="status"></p>
 
 <script>
